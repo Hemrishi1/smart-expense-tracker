@@ -17,6 +17,7 @@ import {
   ShieldAlert
 } from 'lucide-react';
 import { cn } from '../lib/utils';
+import AIChatbot from '../components/AIChatbot';
 
 export default function MainLayout() {
   const { user, loading, logout } = useAuth();
@@ -389,5 +390,6 @@ export default function MainLayout() {
         )}
       </AnimatePresence>
     </div>
+    <AIChatbot />
   );
 }

@@ -10,6 +10,7 @@ import budgetRoutes from './routes/budget.routes';
 import analyticsRoutes from './routes/analytics.routes';
 import insightsRoutes from './routes/insights.routes';
 import adminRoutes from './routes/admin.routes';
+import chatRoutes from './routes/chat.routes';
 import { notFound, errorHandler } from './middleware/error.middleware';
 
 const app: Application = express();
@@ -46,6 +47,7 @@ app.use('/api/budgets', budgetRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/insights', insightsRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/chat', chatRoutes);
 
 // Error Handling Middleware
 app.use(notFound);
