@@ -78,7 +78,8 @@ export default function MainLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex relative overflow-hidden">
+    <>
+      <div className="min-h-screen bg-background text-foreground flex relative overflow-hidden">
       {/* Animated Background Orbs */}
       <div className="absolute top-0 -left-4 w-72 h-72 bg-primary/20 rounded-full mix-blend-screen filter blur-[100px] opacity-70 animate-blob pointer-events-none" />
       <div className="absolute top-0 -right-4 w-72 h-72 bg-secondary/20 rounded-full mix-blend-screen filter blur-[100px] opacity-70 animate-blob animation-delay-2000 pointer-events-none" />
@@ -391,5 +392,6 @@ export default function MainLayout() {
       </AnimatePresence>
     </div>
     <AIChatbot />
+    </>
   );
 }
