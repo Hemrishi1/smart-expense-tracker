@@ -154,7 +154,6 @@ export const getUserProfile = async (req: Request, res: Response, next: NextFunc
       throw new Error('User not found');
     }
   } catch (error) {
-  } catch (error) {
     next(error);
   }
 };
