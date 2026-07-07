@@ -15,6 +15,7 @@ const budget_routes_1 = __importDefault(require("./routes/budget.routes"));
 const analytics_routes_1 = __importDefault(require("./routes/analytics.routes"));
 const insights_routes_1 = __importDefault(require("./routes/insights.routes"));
 const admin_routes_1 = __importDefault(require("./routes/admin.routes"));
+const chat_routes_1 = __importDefault(require("./routes/chat.routes"));
 const error_middleware_1 = require("./middleware/error.middleware");
 const app = (0, express_1.default)();
 // Middleware
@@ -44,6 +45,7 @@ app.use('/api/budgets', budget_routes_1.default);
 app.use('/api/analytics', analytics_routes_1.default);
 app.use('/api/insights', insights_routes_1.default);
 app.use('/api/admin', admin_routes_1.default);
+app.use('/api/chat', chat_routes_1.default);
 // Error Handling Middleware
 app.use(error_middleware_1.notFound);
 app.use(error_middleware_1.errorHandler);

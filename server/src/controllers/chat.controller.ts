@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import Expense from '../models/expense.model';
-import Income from '../models/income.model';
-import Budget from '../models/budget.model';
+import Expense from '../models/Expense';
+import Income from '../models/Income';
+import Budget from '../models/Budget';
 
 // @desc    Chat with AI financial advisor
 // @route   POST /api/chat
@@ -25,9 +25,9 @@ export const chatWithAI = async (req: Request, res: Response, next: NextFunction
       Budget.find({ user: userId }),
     ]);
 
-    const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
-    const totalIncome = incomes.reduce((sum, i) => sum + i.amount, 0);
-    const topCategories = expenses.reduce((acc: Record<string, number>, e) => {
+    const totalExpenses = expenses.reduce((sum: number, e: any) => sum + e.amount, 0);
+    const totalIncome = incomes.reduce((sum: number, i: any) => sum + i.amount, 0);
+    const topCategories = expenses.reduce((acc: Record<string, number>, e: any) => {
       acc[e.category] = (acc[e.category] || 0) + e.amount;
       return acc;
     }, {});
@@ -40,11 +40,11 @@ USER'S CURRENT FINANCIAL SNAPSHOT:
 - Total Expenses (last 20 transactions): $${totalExpenses.toFixed(2)}
 - Total Income (last 10 entries): $${totalIncome.toFixed(2)}
 - Net Balance: $${(totalIncome - totalExpenses).toFixed(2)}
-- Top Spending Categories: ${Object.entries(topCategories).sort((a,b) => b[1]-a[1]).slice(0,5).map(([cat, amt]) => `${cat}: $${(amt as number).toFixed(2)}`).join(', ')}
+- Top Spending Categories: ${Object.entries(topCategories).sort((a, b) => (b[1] as number) - (a[1] as number)).slice(0, 5).map(([cat, amt]) => `${cat}: $${(amt as number).toFixed(2)}`).join(', ')}
 - Active Budgets: ${budgets.length} budget(s) set
-- Recent Expenses: ${expenses.slice(0,5).map(e => `${e.description} ($${e.amount}, ${e.category})`).join('; ')}
+- Recent Expenses: ${expenses.slice(0, 5).map((e: any) => `${e.description} ($${e.amount}, ${e.category})`).join('; ')}
 
-Answer questions about their finances, give saving tips, analyze spending patterns, and provide budgeting advice. 
+Answer questions about their finances, give saving tips, analyze spending patterns, and provide budgeting advice.
 If asked something unrelated to finance, politely redirect to financial topics.
 Keep responses friendly, concise (under 200 words), and actionable.
     `.trim();
