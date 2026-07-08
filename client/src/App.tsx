@@ -11,10 +11,12 @@ import Expenses from './pages/Expenses';
 import Income from './pages/Income';
 import Budgets from './pages/Budgets';
 import AdminPanel from './pages/AdminPanel';
+import AnimatedBackground from './components/AnimatedBackground';
 
 function App() {
   return (
     <BrowserRouter>
+      <AnimatedBackground />
       <Routes>
         {/* Public Routes */}
         <Route element={<AuthLayout />}>

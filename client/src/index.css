@@ -73,21 +73,27 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading tracking-tight;
   }
 }
 
 /* Glassmorphism utility classes */
 @layer utilities {
   .glass {
-    @apply bg-white/[0.03] backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)];
+    @apply bg-white/[0.03] backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] transition-all duration-300;
+  }
+  .glass:hover {
+    @apply border-white/20 bg-white/[0.05] shadow-[0_8px_32px_0_rgba(168,85,247,0.15)];
   }
   .glass-dark {
     @apply bg-black/60 backdrop-blur-2xl border border-white/5 shadow-2xl;
   }
   .glass-panel {
-    @apply bg-background/80 backdrop-blur-2xl border border-primary/20 shadow-[0_0_40px_-10px_rgba(168,85,247,0.2)];
+    @apply bg-background/80 backdrop-blur-2xl border border-primary/30 shadow-[0_0_40px_-10px_rgba(168,85,247,0.3)];
   }
 }
 

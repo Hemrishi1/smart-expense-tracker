@@ -64,22 +64,23 @@ export default function Dashboard() {
         ].map((kpi, i) => (
           <motion.div
             key={kpi.title}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            whileHover={{ scale: 1.05, translateY: -5 }}
-            transition={{ delay: i * 0.1, duration: 0.2 }}
-            className="glass p-6 rounded-xl border border-white/10 relative overflow-hidden group hover:border-primary/50 hover:shadow-[0_0_30px_-5px_rgba(168,85,247,0.3)]"
+            whileHover={{ scale: 1.02, translateY: -5 }}
+            transition={{ delay: i * 0.1, duration: 0.4, type: "spring", stiffness: 100 }}
+            className="glass p-6 rounded-2xl border border-white/10 relative overflow-hidden group hover:border-primary/50 hover:shadow-[0_0_40px_-10px_rgba(168,85,247,0.4)] transition-all duration-300"
           >
-            <div className="flex items-center justify-between mb-4">
+            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="flex items-center justify-between mb-4 relative z-10">
               <p className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">{kpi.title}</p>
-              <div className={`p-2 rounded-lg ${kpi.bg} group-hover:scale-110 transition-transform`}>
+              <div className={`p-3 rounded-xl ${kpi.bg} group-hover:scale-110 transition-transform duration-300`}>
                 <kpi.icon className={`w-5 h-5 ${kpi.color}`} />
               </div>
             </div>
-            <h3 className="text-2xl font-bold">
+            <h3 className="text-3xl font-bold font-heading relative z-10">
               {!kpi.isPercentage && '₹'}{kpi.value}
             </h3>
-            <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-gradient-to-br from-white/5 to-white/0 rounded-full blur-2xl group-hover:from-primary/20 transition-all duration-500" />
+            <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-gradient-to-br from-white/10 to-transparent rounded-full blur-2xl group-hover:from-primary/30 transition-all duration-700" />
           </motion.div>
         ))}
       </div>
