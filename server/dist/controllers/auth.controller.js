@@ -3,10 +3,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateUserProfile = exports.getUserProfile = exports.refreshToken = exports.logoutUser = exports.loginUser = exports.registerUser = void 0;
+exports.resetPassword = exports.forgotPassword = exports.updateUserProfile = exports.getUserProfile = exports.refreshToken = exports.logoutUser = exports.loginUser = exports.registerUser = void 0;
 const User_1 = __importDefault(require("../models/User"));
 const token_utils_1 = require("../utils/token.utils");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const crypto_1 = __importDefault(require("crypto"));
+const email_service_1 = require("../services/email.service");
 // @desc    Register user
 // @route   POST /api/auth/register
 // @access  Public
@@ -18,14 +20,9 @@ const registerUser = async (req, res, next) => {
             res.status(400);
             throw new Error('User already exists');
         }
-        const user = await User_1.default.create({
-            name,
-            email,
-            password,
-        });
+        const user = await User_1.default.create({ name, email, password });
         if (user) {
             const { refreshToken } = (0, token_utils_1.generateTokens)(res, user._id);
-            // Save refresh token to user
             user.refreshToken = refreshToken;
             await user.save();
             res.status(201).json({
@@ -34,6 +31,9 @@ const registerUser = async (req, res, next) => {
                 email: user.email,
                 role: user.role,
                 avatar: user.avatar,
+                age: user.age,
+                gender: user.gender,
+                bio: user.bio,
             });
         }
         else {
@@ -55,7 +55,6 @@ const loginUser = async (req, res, next) => {
         const user = await User_1.default.findOne({ email }).select('+password');
         if (user && (await user.comparePassword(password))) {
             const { refreshToken } = (0, token_utils_1.generateTokens)(res, user._id);
-            // Update refresh token
             user.refreshToken = refreshToken;
             await user.save();
             res.json({
@@ -64,6 +63,9 @@ const loginUser = async (req, res, next) => {
                 email: user.email,
                 role: user.role,
                 avatar: user.avatar,
+                age: user.age,
+                gender: user.gender,
+                bio: user.bio,
             });
         }
         else {
@@ -113,7 +115,6 @@ const refreshToken = async (req, res, next) => {
             res.status(401);
             throw new Error('Not authorized, token failed');
         }
-        // Generate new tokens
         const { refreshToken: newRefreshToken } = (0, token_utils_1.generateTokens)(res, user._id);
         user.refreshToken = newRefreshToken;
         await user.save();
@@ -138,6 +139,9 @@ const getUserProfile = async (req, res, next) => {
                 email: user.email,
                 role: user.role,
                 avatar: user.avatar,
+                age: user.age,
+                gender: user.gender,
+                bio: user.bio,
             });
         }
         else {
@@ -158,9 +162,16 @@ const updateUserProfile = async (req, res, next) => {
         const user = await User_1.default.findById(req.user._id);
         if (user) {
             user.name = req.body.name || user.name;
-            if (req.body.password) {
+            if (req.body.age !== undefined)
+                user.age = req.body.age;
+            if (req.body.gender !== undefined)
+                user.gender = req.body.gender;
+            if (req.body.bio !== undefined)
+                user.bio = req.body.bio;
+            if (req.body.avatar !== undefined)
+                user.avatar = req.body.avatar;
+            if (req.body.password)
                 user.password = req.body.password;
-            }
             const updatedUser = await user.save();
             res.json({
                 _id: updatedUser._id,
@@ -168,6 +179,9 @@ const updateUserProfile = async (req, res, next) => {
                 email: updatedUser.email,
                 role: updatedUser.role,
                 avatar: updatedUser.avatar,
+                age: updatedUser.age,
+                gender: updatedUser.gender,
+                bio: updatedUser.bio,
             });
         }
         else {
@@ -180,3 +194,67 @@ const updateUserProfile = async (req, res, next) => {
     }
 };
 exports.updateUserProfile = updateUserProfile;
+// @desc    Forgot password - send reset email
+// @route   POST /api/auth/forgot-password
+// @access  Public
+const forgotPassword = async (req, res, next) => {
+    try {
+        const { email } = req.body;
+        const user = await User_1.default.findOne({ email }).select('+resetPasswordToken +resetPasswordExpire');
+        if (!user) {
+            // Send success anyway to prevent email enumeration
+            res.json({ message: 'If an account with that email exists, a reset link has been sent.' });
+            return;
+        }
+        // Generate reset token
+        const resetToken = crypto_1.default.randomBytes(32).toString('hex');
+        user.resetPasswordToken = crypto_1.default.createHash('sha256').update(resetToken).digest('hex');
+        user.resetPasswordExpire = Date.now() + 15 * 60 * 1000; // 15 minutes
+        await user.save();
+        const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+        const resetUrl = `${clientUrl}/reset-password/${resetToken}`;
+        try {
+            await (0, email_service_1.sendPasswordResetEmail)(user.email, resetUrl, user.name);
+            res.json({ message: 'Password reset email sent! Check your inbox.' });
+        }
+        catch (emailError) {
+            user.resetPasswordToken = undefined;
+            user.resetPasswordExpire = undefined;
+            await user.save();
+            res.status(500);
+            throw new Error('Email could not be sent. Please check email configuration.');
+        }
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.forgotPassword = forgotPassword;
+// @desc    Reset password using token
+// @route   POST /api/auth/reset-password/:token
+// @access  Public
+const resetPassword = async (req, res, next) => {
+    try {
+        const { token } = req.params;
+        const { password } = req.body;
+        const hashedToken = crypto_1.default.createHash('sha256').update(token).digest('hex');
+        const user = await User_1.default.findOne({
+            resetPasswordToken: hashedToken,
+            resetPasswordExpire: { $gt: Date.now() },
+        }).select('+resetPasswordToken +resetPasswordExpire');
+        if (!user) {
+            res.status(400);
+            throw new Error('Invalid or expired reset token. Please request a new one.');
+        }
+        user.password = password;
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpire = undefined;
+        await user.save();
+        (0, token_utils_1.clearTokens)(res);
+        res.json({ message: 'Password reset successful! You can now log in.' });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.resetPassword = resetPassword;

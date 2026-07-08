@@ -11,6 +11,8 @@ router.post('/register', auth_controller_1.registerUser);
 router.post('/login', auth_controller_1.loginUser);
 router.post('/logout', auth_controller_1.logoutUser);
 router.post('/refresh', auth_controller_1.refreshToken);
+router.post('/forgot-password', auth_controller_1.forgotPassword);
+router.post('/reset-password/:token', auth_controller_1.resetPassword);
 router.route('/profile')
     .get(auth_middleware_1.protect, auth_controller_1.getUserProfile)
     .put(auth_middleware_1.protect, auth_controller_1.updateUserProfile);

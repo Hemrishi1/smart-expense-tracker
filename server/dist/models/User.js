@@ -63,6 +63,19 @@ const userSchema = new mongoose_1.Schema({
         type: String,
         default: '',
     },
+    age: {
+        type: Number,
+    },
+    gender: {
+        type: String,
+        enum: ['male', 'female', 'non-binary', 'prefer-not-to-say', ''],
+        default: '',
+    },
+    bio: {
+        type: String,
+        default: '',
+        maxlength: 200,
+    },
     isVerified: {
         type: Boolean,
         default: false,
@@ -75,7 +88,15 @@ const userSchema = new mongoose_1.Schema({
     refreshToken: {
         type: String,
         select: false,
-    }
+    },
+    resetPasswordToken: {
+        type: String,
+        select: false,
+    },
+    resetPasswordExpire: {
+        type: Number,
+        select: false,
+    },
 }, {
     timestamps: true,
 });

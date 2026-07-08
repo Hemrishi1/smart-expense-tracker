@@ -6,9 +6,14 @@ export interface IUser extends Document {
   email: string;
   password?: string;
   avatar?: string;
+  age?: number;
+  gender?: string;
+  bio?: string;
   isVerified: boolean;
   role: 'user' | 'admin';
   refreshToken?: string;
+  resetPasswordToken?: string;
+  resetPasswordExpire?: number;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
@@ -38,6 +43,19 @@ const userSchema = new Schema<IUser>(
       type: String,
       default: '',
     },
+    age: {
+      type: Number,
+    },
+    gender: {
+      type: String,
+      enum: ['male', 'female', 'non-binary', 'prefer-not-to-say', ''],
+      default: '',
+    },
+    bio: {
+      type: String,
+      default: '',
+      maxlength: 200,
+    },
     isVerified: {
       type: Boolean,
       default: false,
@@ -50,7 +68,15 @@ const userSchema = new Schema<IUser>(
     refreshToken: {
       type: String,
       select: false,
-    }
+    },
+    resetPasswordToken: {
+      type: String,
+      select: false,
+    },
+    resetPasswordExpire: {
+      type: Number,
+      select: false,
+    },
   },
   {
     timestamps: true,

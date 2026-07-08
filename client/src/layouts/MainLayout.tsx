@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Outlet, Navigate, Link, useLocation } from 'react-router-dom';
+import { useState, useRef } from 'react';
+import { Outlet, Navigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -14,10 +14,12 @@ import {
   X,
   User as UserIcon,
   Bell,
-  ShieldAlert
+  ShieldAlert,
+  Camera,
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import AIChatbot from '../components/AIChatbot';
+import api from '../services/api';
 
 export default function MainLayout() {
   const { user, loading, logout } = useAuth();
@@ -31,24 +33,39 @@ export default function MainLayout() {
   ]);
   
   const [profileName, setProfileName] = useState(user?.name || '');
+  const [profileAge, setProfileAge] = useState<string>(user?.age?.toString() || '');
+  const [profileGender, setProfileGender] = useState(user?.gender || '');
+  const [profileBio, setProfileBio] = useState(user?.bio || '');
+  const [profileAvatar, setProfileAvatar] = useState(user?.avatar || '');
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
-  
-  const location = useLocation();
+  const [profileSuccess, setProfileSuccess] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => setProfileAvatar(reader.result as string);
+    reader.readAsDataURL(file);
+  };
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsUpdatingProfile(true);
+    setProfileSuccess(false);
     try {
-      // We would ideally call the auth context to update user state here too.
-      await fetch('/api/auth/profile', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` },
-        body: JSON.stringify({ name: profileName })
+      await api.put('/auth/profile', {
+        name: profileName,
+        age: profileAge ? parseInt(profileAge) : undefined,
+        gender: profileGender,
+        bio: profileBio,
+        avatar: profileAvatar,
       });
-      // Need a proper page reload or auth context update for this to fully apply without React Query context here.
-      window.location.reload(); 
+      setProfileSuccess(true);
+      setTimeout(() => window.location.reload(), 1200);
     } catch (error) {
       console.error(error);
+    } finally {
       setIsUpdatingProfile(false);
     }
   };
@@ -343,16 +360,35 @@ export default function MainLayout() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="glass border border-white/20 p-6 rounded-2xl shadow-2xl relative z-10 w-full max-w-md"
+              className="glass border border-white/20 p-6 rounded-2xl shadow-2xl relative z-10 w-full max-w-md max-h-[90vh] overflow-y-auto"
             >
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-xl font-bold">Profile Settings</h3>
-                <button 
-                  onClick={() => setIsProfileModalOpen(false)}
-                  className="p-1 hover:bg-muted rounded-md"
-                >
+                <button onClick={() => setIsProfileModalOpen(false)} className="p-1 hover:bg-muted rounded-md">
                   <X className="w-5 h-5" />
                 </button>
+              </div>
+
+              {/* Avatar Upload */}
+              <div className="flex flex-col items-center mb-6">
+                <div className="relative">
+                  <div className="w-24 h-24 rounded-full overflow-hidden bg-primary/20 flex items-center justify-center border-2 border-primary/30">
+                    {profileAvatar ? (
+                      <img src={profileAvatar} alt="Avatar" className="w-full h-full object-cover" />
+                    ) : (
+                      <UserIcon className="w-10 h-10 text-primary/60" />
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => avatarInputRef.current?.click()}
+                    className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-primary flex items-center justify-center hover:bg-primary/90 transition-colors"
+                  >
+                    <Camera className="w-4 h-4 text-white" />
+                  </button>
+                  <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">Click camera to change photo</p>
               </div>
 
               <form onSubmit={handleUpdateProfile} className="space-y-4">
@@ -366,7 +402,7 @@ export default function MainLayout() {
                     className="w-full px-3 py-2 bg-background/50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Email Address</label>
                   <input
@@ -378,10 +414,56 @@ export default function MainLayout() {
                   <p className="text-xs text-muted-foreground">Email address cannot be changed.</p>
                 </div>
 
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Age</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="120"
+                      value={profileAge}
+                      onChange={(e) => setProfileAge(e.target.value)}
+                      placeholder="e.g. 25"
+                      className="w-full px-3 py-2 bg-background/50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Gender</label>
+                    <select
+                      value={profileGender}
+                      onChange={(e) => setProfileGender(e.target.value)}
+                      className="w-full px-3 py-2 bg-background/50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    >
+                      <option value="">Prefer not to say</option>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                      <option value="non-binary">Non-binary</option>
+                      <option value="prefer-not-to-say">—</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Bio <span className="text-muted-foreground font-normal">(max 200 chars)</span></label>
+                  <textarea
+                    value={profileBio}
+                    onChange={(e) => setProfileBio(e.target.value)}
+                    maxLength={200}
+                    rows={3}
+                    placeholder="Tell us a bit about yourself..."
+                    className="w-full px-3 py-2 bg-background/50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+                  />
+                  <p className="text-xs text-muted-foreground text-right">{profileBio.length}/200</p>
+                </div>
+
+                {profileSuccess && (
+                  <p className="text-green-400 text-sm text-center">✓ Profile updated successfully!</p>
+                )}
+
                 <button
                   type="submit"
                   disabled={isUpdatingProfile}
-                  className="w-full py-2.5 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors mt-6"
+                  className="w-full py-2.5 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors mt-2"
                 >
                   {isUpdatingProfile ? 'Saving...' : 'Save Profile'}
                 </button>

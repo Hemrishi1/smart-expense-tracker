@@ -17,8 +17,11 @@ const protect = async (req, res, next) => {
         }
         catch (error) {
             console.error(error);
+            // Clear the bad/expired cookie so the browser is forced to re-login
+            res.clearCookie('jwt');
+            res.clearCookie('refreshToken');
             res.status(401);
-            next(new Error('Not authorized, token failed'));
+            next(new Error('Session expired. Please log in again.'));
         }
     }
     else {
