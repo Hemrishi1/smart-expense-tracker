@@ -1,6 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 import WebSocket from 'ws';
 
+// Polyfill WebSocket for Node.js 20 environment on Render
+if (typeof globalThis.WebSocket === 'undefined') {
+  (globalThis as any).WebSocket = WebSocket;
+}
+
 // These will be loaded from process.env, but we don't throw an error immediately 
 // so the app doesn't crash if they aren't set yet.
 const supabaseUrl = process.env.SUPABASE_URL || '';
@@ -10,11 +15,8 @@ export const supabase = (supabaseUrl && supabaseKey)
   ? createClient(supabaseUrl, supabaseKey, {
       auth: {
         persistSession: false,
-      },
-      global: {
-        WebSocket: WebSocket as any,
       }
-    } as any) 
+    }) 
   : null;
 
 export const uploadAvatarToSupabase = async (base64Image: string, userId: string): Promise<string> => {
