@@ -46,10 +46,10 @@ export default function AIChatbot() {
         history: historyForApi,
       });
       setMessages((prev) => [...prev, { role: 'assistant', text: data.reply }]);
-    } catch {
+    } catch (error) {
       setMessages((prev) => [
         ...prev,
-        { role: 'assistant', text: '⚠️ Sorry, I ran into an error. Please try again in a moment.' },
+        { role: 'assistant', text: `⚠️ Error: ${error instanceof Error ? error.message : 'Unknown error. Check your API key in the server .env file.'}` },
       ]);
     } finally {
       setIsLoading(false);

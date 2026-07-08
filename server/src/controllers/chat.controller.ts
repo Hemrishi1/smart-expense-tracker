@@ -66,7 +66,10 @@ Keep responses friendly, concise (under 200 words), and actionable.
     const responseText = result.response.text();
 
     res.status(200).json({ reply: responseText });
-  } catch (error) {
+  } catch (error: any) {
+    console.error('=== GEMINI CHAT ERROR ===');
+    console.error(error?.message || error);
+    console.error('========================');
     next(error);
   }
 };
