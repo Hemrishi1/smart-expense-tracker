@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import WebSocket from 'ws';
 
 // These will be loaded from process.env, but we don't throw an error immediately 
 // so the app doesn't crash if they aren't set yet.
@@ -6,7 +7,14 @@ const supabaseUrl = process.env.SUPABASE_URL || '';
 const supabaseKey = process.env.SUPABASE_KEY || '';
 
 export const supabase = (supabaseUrl && supabaseKey) 
-  ? createClient(supabaseUrl, supabaseKey) 
+  ? createClient(supabaseUrl, supabaseKey, {
+      auth: {
+        persistSession: false,
+      },
+      global: {
+        WebSocket: WebSocket as any,
+      }
+    } as any) 
   : null;
 
 export const uploadAvatarToSupabase = async (base64Image: string, userId: string): Promise<string> => {
