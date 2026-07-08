@@ -19,7 +19,7 @@ export const generateTokens = (res: Response, userId: string | mongoose.Types.Ob
   res.cookie('jwt', accessToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV !== 'development',
-    sameSite: 'strict',
+    sameSite: process.env.NODE_ENV === 'development' ? 'strict' : 'none',
     maxAge: 60 * 60 * 1000, // 1 hour
   });
 
@@ -27,7 +27,7 @@ export const generateTokens = (res: Response, userId: string | mongoose.Types.Ob
     httpOnly: true,
     secure: process.env.NODE_ENV !== 'development',
     path: '/api/auth/refresh',
-    sameSite: 'strict',
+    sameSite: process.env.NODE_ENV === 'development' ? 'strict' : 'none',
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
 
