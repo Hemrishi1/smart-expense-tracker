@@ -4,6 +4,7 @@ import { generateTokens, clearTokens } from '../utils/token.utils';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { sendPasswordResetEmail } from '../services/email.service';
+import { uploadAvatarToSupabase } from '../services/supabase.service';
 
 // @desc    Register user
 // @route   POST /api/auth/register
@@ -168,7 +169,23 @@ export const updateUserProfile = async (req: Request, res: Response, next: NextF
       if (req.body.age !== undefined) user.age = req.body.age;
       if (req.body.gender !== undefined) user.gender = req.body.gender;
       if (req.body.bio !== undefined) user.bio = req.body.bio;
-      if (req.body.avatar !== undefined) user.avatar = req.body.avatar;
+      
+      if (req.body.avatar !== undefined) {
+        // Check if it's a new base64 upload
+        if (req.body.avatar.startsWith('data:image/')) {
+          try {
+            const avatarUrl = await uploadAvatarToSupabase(req.body.avatar, user._id.toString());
+            user.avatar = avatarUrl;
+          } catch (uploadError: any) {
+            console.error('Avatar upload failed:', uploadError);
+            res.status(500);
+            throw new Error(`Failed to upload avatar: ${uploadError.message}`);
+          }
+        } else {
+          user.avatar = req.body.avatar;
+        }
+      }
+      
       if (req.body.password) user.password = req.body.password;
 
       const updatedUser = await user.save();

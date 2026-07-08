@@ -9,6 +9,7 @@ const token_utils_1 = require("../utils/token.utils");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const crypto_1 = __importDefault(require("crypto"));
 const email_service_1 = require("../services/email.service");
+const supabase_service_1 = require("../services/supabase.service");
 // @desc    Register user
 // @route   POST /api/auth/register
 // @access  Public
@@ -168,8 +169,23 @@ const updateUserProfile = async (req, res, next) => {
                 user.gender = req.body.gender;
             if (req.body.bio !== undefined)
                 user.bio = req.body.bio;
-            if (req.body.avatar !== undefined)
-                user.avatar = req.body.avatar;
+            if (req.body.avatar !== undefined) {
+                // Check if it's a new base64 upload
+                if (req.body.avatar.startsWith('data:image/')) {
+                    try {
+                        const avatarUrl = await (0, supabase_service_1.uploadAvatarToSupabase)(req.body.avatar, user._id.toString());
+                        user.avatar = avatarUrl;
+                    }
+                    catch (uploadError) {
+                        console.error('Avatar upload failed:', uploadError);
+                        res.status(500);
+                        throw new Error(`Failed to upload avatar: ${uploadError.message}`);
+                    }
+                }
+                else {
+                    user.avatar = req.body.avatar;
+                }
+            }
             if (req.body.password)
                 user.password = req.body.password;
             const updatedUser = await user.save();

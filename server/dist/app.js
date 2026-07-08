@@ -19,8 +19,8 @@ const chat_routes_1 = __importDefault(require("./routes/chat.routes"));
 const error_middleware_1 = require("./middleware/error.middleware");
 const app = (0, express_1.default)();
 // Middleware
-app.use(express_1.default.json());
-app.use(express_1.default.urlencoded({ extended: true }));
+app.use(express_1.default.json({ limit: '10mb' }));
+app.use(express_1.default.urlencoded({ limit: '10mb', extended: true }));
 app.use((0, cookie_parser_1.default)());
 // CORS configuration
 const allowedOrigins = [
