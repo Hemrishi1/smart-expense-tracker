@@ -1,5 +1,7 @@
 # SmartX - Personal Finance & Expense Tracker 🚀
 
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Click_Here-blue?style=for-the-badge)](https://smart-expense-tracker.onrender.com)
+
 ![SmartX Banner](https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?q=80&w=1200&auto=format&fit=crop)
 
 SmartX is a beautiful, highly interactive, full-stack Personal Finance application designed to help users track expenses, manage budgets, and gain insights into their financial health. 
