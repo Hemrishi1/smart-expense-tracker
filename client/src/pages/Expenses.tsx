@@ -2,11 +2,15 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, X, Trash2, IndianRupee, Download } from 'lucide-react';
+import { Plus, X, Trash2, IndianRupee, Download, Camera } from 'lucide-react';
 import { exportToCSV } from '../utils/export.utils';
+import Tesseract from 'tesseract.js';
+import { useRef } from 'react';
 
 export default function Expenses() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
 
   const { data: expenses, isLoading } = useQuery({
@@ -54,6 +58,46 @@ export default function Expenses() {
     });
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsScanning(true);
+    try {
+      const result = await Tesseract.recognize(file, 'eng');
+      const text = result.data.text;
+      
+      // Basic OCR parsing logic
+      const amountRegex = /(?:total|amount|due|sum)[\s:$]*([0-9,]+(?:\.[0-9]{2})?)/i;
+      const amountMatch = text.match(amountRegex);
+      
+      // Fallback: just find any currency-like number
+      const fallbackAmountMatch = text.match(/(?:(?:rs|inr|₹|\$)\s*)?([0-9]{1,5}(?:,[0-9]{3})*\.[0-9]{2})/i);
+
+      let parsedAmount = '';
+      if (amountMatch) {
+        parsedAmount = amountMatch[1].replace(/,/g, '');
+      } else if (fallbackAmountMatch) {
+        parsedAmount = fallbackAmountMatch[1].replace(/,/g, '');
+      }
+
+      setFormData(prev => ({
+        ...prev,
+        title: 'Scanned Receipt',
+        amount: parsedAmount || '',
+      }));
+      
+      setIsAddModalOpen(true);
+    } catch (error) {
+      console.error('OCR Error:', error);
+      alert('Failed to read receipt. Please enter manually.');
+    } finally {
+      setIsScanning(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -62,6 +106,25 @@ export default function Expenses() {
           <p className="text-muted-foreground">Manage your spending</p>
         </div>
         <div className="flex items-center gap-3">
+          <input 
+            type="file" 
+            accept="image/*" 
+            ref={fileInputRef} 
+            onChange={handleFileUpload} 
+            className="hidden" 
+          />
+          <button 
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isScanning}
+            className="flex items-center gap-2 px-4 py-2 bg-secondary/10 text-secondary border border-secondary/20 rounded-lg hover:bg-secondary hover:text-secondary-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isScanning ? (
+              <div className="w-4 h-4 border-2 border-secondary border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              <Camera className="w-4 h-4" />
+            )}
+            {isScanning ? 'Scanning...' : 'Scan Receipt'}
+          </button>
           <button 
             onClick={() => expenses && exportToCSV(expenses, 'all-expenses')}
             className="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary border border-primary/20 rounded-lg hover:bg-primary hover:text-primary-foreground transition-all"
